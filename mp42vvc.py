@@ -1,7 +1,6 @@
 #function things
 
 import datetime
-import traceback
 
 def time():
     yeet = datetime.datetime.now().today()
@@ -67,9 +66,16 @@ import argparse
 import numpy as np
 import os
 import sys
+import traceback
+import linecache
 
 from datetime import timedelta
 from moviepy.editor import VideoFileClip
+
+def format_timedelta(td):
+    result = str(td)
+    
+    
 
 #Argparse stuff
 try:
@@ -87,9 +93,16 @@ try:
 
     log(0, f"File: {file}")
     
-    1/0
-
+    sfps = 30
+    
 except Exception as error:
-    log(2, str(traceback.format_exc()).replace("\n", " "))
+    exc_type, exc_obj, tb = sys.exc_info()
+    f = tb.tb_frame
+    lineno = tb.tb_lineno
+    filename = f.f_code.co_filename
+    linecache.checkcache(filename)
+    line = linecache.getline(filename, lineno, f.f_globals)
+    
+    log(2, f"Line {lineno}: " + type(error).__name__ + ": " + str(error))
     log(1, "Exiting...")
     sys.exit()
