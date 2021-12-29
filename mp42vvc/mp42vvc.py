@@ -74,8 +74,11 @@ import sys
 import traceback
 import linecache
 import subprocess
+import beetroot
 
 from moviepy.editor import VideoFileClip
+
+pb = beetroot.progBar(3)
 
 def fsort(a):
     ex = "." + a[0].split(".")[-1]
@@ -105,6 +108,7 @@ try:
 
         log(0, f"File: {file}")
         log(0, "Extracting frames...")
+        pb.progress()
         
         vclip = VideoFileClip(file)
         fname = "tempframes"
@@ -115,7 +119,7 @@ try:
         except FileExistsError:
             pass
         
-        sfps = min(vclip.fps, 30)
+        sfps = vclip.fps
         
         log(0, f"Output fps: {sfps}")
         
@@ -128,6 +132,7 @@ try:
             vclip.save_frame(frame_fname, current_duration)
             
         log(0, "Converting to Vector graphics...")
+        pb.progress()
         
         curdir = os.path.abspath(sys.argv[0])
         
@@ -139,10 +144,11 @@ try:
             pass
         
         for item in fsort(os.listdir(fname)):
-            print(os.path.dirname(curdir) + f"\\potrace\\potrace.exe tempframes\\{item} -o frames\\" + ".".join(item.split(".")[:-1] + ["svg"]))
-            subprocess.call(os.path.dirname(curdir) + f"\\potrace\\potrace.exe tempframes\\{item} -o frames\\" + ".".join(item.split(".")[:-1] + ["svg"]))
+            with beetroot.suppress():
+                subprocess.call(os.path.dirname(curdir) + f"\\potrace\\potrace.exe tempframes\\{item} -o frames\\" + ".".join(item.split(".")[:-1] + ["svg"]))
             
-        print("Done!")
+        pb.progress()
+        print("\nDone!")
     
 except Exception as error:
     exc_type, exc_obj, tb = sys.exc_info()
