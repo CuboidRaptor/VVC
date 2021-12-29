@@ -75,10 +75,11 @@ import traceback
 import linecache
 import subprocess
 import beetroot
+import shutil
 
 from moviepy.editor import VideoFileClip
 
-pb = beetroot.progBar(3)
+pb = beetroot.progBar(4)
 
 def fsort(a):
     ex = "." + a[0].split(".")[-1]
@@ -121,7 +122,7 @@ try:
         
         sfps = vclip.fps
         
-        log(0, f"Output fps: {sfps}")
+        log(0, f"Video fps: {sfps}")
         
         step = 1 / vclip.fps if sfps == 0 else 1 / sfps
         
@@ -145,7 +146,19 @@ try:
         
         for item in fsort(os.listdir(fname)):
             with beetroot.suppress():
-                subprocess.call(os.path.dirname(curdir) + f"\\potrace\\potrace.exe tempframes\\{item} -o frames\\" + ".".join(item.split(".")[:-1] + ["svg"]))
+                subprocess.call(os.path.dirname(curdir) + f"/potrace/potrace.exe tempframes/{item} -s --group -o frames/" + ".".join(item.split(".")[:-1] + ["svg"]))
+            
+        log(0, "Removing temporary frame folder...")
+        pb.progress()
+        
+        try:
+            shutil.rmtree(fname)
+            
+        except FileNotFoundError:
+            log(1, "File not found when deleting temporary .bmp folder for frame extracts")
+            
+        except PermissionError:
+            log(1, "Either permission is not granted or frames are being accessed by another program.")
             
         pb.progress()
         print("\nDone!")
