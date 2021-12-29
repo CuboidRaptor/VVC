@@ -1,3 +1,7 @@
+#Dependencies (to pip install):
+#moviepy
+#pypotrace
+
 #function things
 
 import datetime
@@ -60,6 +64,7 @@ def log(mode, text):
             return 1
         
 log(0, "Starting...")
+print("Converting...")
 
 #Imports
 import argparse
@@ -68,32 +73,76 @@ import os
 import sys
 import traceback
 import linecache
+import subprocess
 
-from datetime import timedelta
 from moviepy.editor import VideoFileClip
 
-def format_timedelta(td):
-    result = str(td)
-    
-    
+def fsort(a):
+    ex = "." + a[0].split(".")[-1]
+    for i in range(0, len(a)):
+        a[i] = int(".".join(a[i].split(".")[:-1]))
+        
+    a = sorted(a)
+    for i in range(0, len(a)):
+        a[i] = str(a[i]) + ex
+        
+    return a
 
-#Argparse stuff
 try:
-    pa = argparse.ArgumentParser(
-        description="Convert .mp4s to .vvcs."
-    )
-    pa.add_argument(
-        "File",
-        metavar="file",
-        type=str,
-        help="Filename of .mp4 to be converted"
-    )
-    args = pa.parse_args()
-    file = args.File #The .mp4 file
+    if __name__.endswith("__main__"):
+        #Argparse stuff
+        pa = argparse.ArgumentParser(
+            description="Convert .mp4s to .vvcs."
+        )
+        pa.add_argument(
+            "File",
+            metavar="file",
+            type=str,
+            help="Filename of .mp4 to be converted"
+        )
+        args = pa.parse_args()
+        file = args.File #The .mp4 file
 
-    log(0, f"File: {file}")
-    
-    sfps = 30
+        log(0, f"File: {file}")
+        log(0, "Extracting frames...")
+        
+        vclip = VideoFileClip(file)
+        fname = "tempframes"
+        
+        try:
+            os.mkdir(fname)
+            
+        except FileExistsError:
+            pass
+        
+        sfps = min(vclip.fps, 30)
+        
+        log(0, f"Output fps: {sfps}")
+        
+        step = 1 / vclip.fps if sfps == 0 else 1 / sfps
+        
+        nam = -1
+        for current_duration in np.arange(0, vclip.duration, step):
+            nam += 1
+            frame_fname = os.path.join(fname, f"{nam}.bmp")
+            vclip.save_frame(frame_fname, current_duration)
+            
+        log(0, "Converting to Vector graphics...")
+        
+        curdir = os.path.abspath(sys.argv[0])
+        
+        try:
+            fname2 = "frames"
+            os.mkdir(fname2)
+            
+        except FileExistsError:
+            pass
+        
+        for item in fsort(os.listdir(fname)):
+            print(os.path.dirname(curdir) + f"\\potrace\\potrace.exe tempframes\\{item} -o frames\\" + ".".join(item.split(".")[:-1] + ["svg"]))
+            subprocess.call(os.path.dirname(curdir) + f"\\potrace\\potrace.exe tempframes\\{item} -o frames\\" + ".".join(item.split(".")[:-1] + ["svg"]))
+            
+        print("Done!")
     
 except Exception as error:
     exc_type, exc_obj, tb = sys.exc_info()
@@ -103,6 +152,8 @@ except Exception as error:
     linecache.checkcache(filename)
     line = linecache.getline(filename, lineno, f.f_globals)
     
-    log(2, f"Line {lineno}: " + type(error).__name__ + ": " + str(error))
+    err = f"Line {lineno}: " + type(error).__name__ + ": " + str(error)
+    log(2, err)
     log(1, "Exiting...")
+    print(f"An error has occured.\n{err}\nCheck `latest.log` for more details.")
     sys.exit()

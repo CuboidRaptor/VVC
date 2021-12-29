@@ -1,3 +1,5 @@
 test.*
 __freeze__.bat
 *.log
+*.bmp
+*.svg
