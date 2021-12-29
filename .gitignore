@@ -1,6 +1,9 @@
 test.*
-__freeze__.bat
+
 *.log
 *.bmp
 *.svg
 *.jpg
+
+__freeze__.bat
+import.bat
