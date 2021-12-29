@@ -76,6 +76,7 @@ import linecache
 import subprocess
 import beetroot
 import shutil
+import platform
 
 from moviepy.editor import VideoFileClip
 
@@ -95,6 +96,12 @@ def fsort(a):
 try:
     if __name__.endswith("__main__"):
         #Argparse stuff
+        curdir = os.path.abspath(sys.argv[0])
+        vtracer = (os.path.dirname(curdir) + "\\vtracer.exe") if platform.system() == "Windows" else ((os.path.dirname(curdir) + "/vtracer") if platform.system() == "Linux" else 1)
+        
+        if vtracer == 1:
+            raise OSError("Only Windows and Linux are supported.")
+        
         pa = argparse.ArgumentParser(
             description="Convert .mp4s to .vvcs."
         )
@@ -129,13 +136,11 @@ try:
         nam = -1
         for current_duration in np.arange(0, vclip.duration, step):
             nam += 1
-            frame_fname = os.path.join(fname, f"{nam}.bmp")
+            frame_fname = os.path.join(fname, f"{nam}.jpg")
             vclip.save_frame(frame_fname, current_duration)
             
         log(0, "Converting to Vector graphics...")
         pb.progress()
-        
-        curdir = os.path.abspath(sys.argv[0])
         
         try:
             fname2 = "frames"
@@ -146,13 +151,14 @@ try:
         
         for item in fsort(os.listdir(fname)):
             with beetroot.suppress():
-                subprocess.call(os.path.dirname(curdir) + f"/potrace/potrace.exe tempframes/{item} -s --group -o frames/" + ".".join(item.split(".")[:-1] + ["svg"]))
+                subprocess.call(vtracer + f" -p 8 -l 3.5 -s 90 --input tempframes/{item} ---output frames/" + ".".join(item.split(".")[:-1] + ["svg"]))
             
         log(0, "Removing temporary frame folder...")
         pb.progress()
         
         try:
-            shutil.rmtree(fname)
+            #shutil.rmtree(fname)
+            pass
             
         except FileNotFoundError:
             log(1, "File not found when deleting temporary .bmp folder for frame extracts")
