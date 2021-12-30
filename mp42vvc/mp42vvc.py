@@ -98,6 +98,10 @@ try:
         #Argparse stuff
         curdir = os.path.abspath(sys.argv[0])
         vtracer = (os.path.dirname(curdir) + "\\vtracer.exe") if platform.system() == "Windows" else ((os.path.dirname(curdir) + "/vtracer") if platform.system() == "Linux" else 1)
+        ffmpeg = (os.path.dirname(curdir) + "\\ffmpeg\\bin\\ffmpeg.exe") if platform.system() == "Windows" else ((os.path.dirname(curdir) + "/ffmpeg_linux/ffmpeg") if platform.system() == "Linux" else 1)
+        
+        if vtracer == 1:
+            raise OSError("Only Windows and Linux are supported.")
         
         if vtracer == 1:
             raise OSError("Only Windows and Linux are supported.")
@@ -188,12 +192,13 @@ try:
             log(1, "Either permission is not granted or frames are being accessed by another program.")
             
         log(0, f"Done in ~{ltimer.stop()} ms.")
-        log(0, "Demuxing audio...")
+        log(0, "Demuxing audio and adding to video...")
         pb.progress()
         ltimer.start()
         
         vclip.audio.write_audiofile(vidname + "/audio.wav", codec="pcm_s16le")
-            
+        subprocess.call(ffmpeg + " -i audio.wav " + vidname + "/audio.flac")
+        
         pb.progress()
         print("\nDone!")
         log(0, f"Done in ~{ltimer.stop()} ms.\n")
