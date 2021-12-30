@@ -80,7 +80,7 @@ import platform
 
 from moviepy.editor import VideoFileClip
 
-pb = beetroot.progBar(4)
+pb = beetroot.progBar(5)
 
 def fsort(a):
     ex = "." + a[0].split(".")[-1]
@@ -113,10 +113,27 @@ try:
         )
         args = pa.parse_args()
         file = args.File #The .mp4 file
+        vidname = ".".join(file.split(".")[:-1])
+        
+        try:
+            os.mkdir(vidname)
+            
+        except FileExistsError:
+            pass
+        
+        if not file.endswith(".mp4"):
+            class FileError(Exception):
+                pass
+            
+            raise FileError("The entered file isn't an mp4 file")
 
         log(0, f"File: {file}")
         log(0, "Extracting frames...")
         pb.progress()
+        ltimer = beetroot.stopwatch()
+        wtimer = beetroot.stopwatch()
+        ltimer.start()
+        wtimer.start()
         
         vclip = VideoFileClip(file)
         fname = "tempframes"
@@ -139,11 +156,13 @@ try:
             frame_fname = os.path.join(fname, f"{nam}.jpg")
             vclip.save_frame(frame_fname, current_duration)
             
+        log(0, f"Done in ~{ltimer.stop()} ms.")
         log(0, "Converting to Vector graphics...")
         pb.progress()
+        ltimer.start()
         
         try:
-            fname2 = "frames"
+            fname2 = vidname + "/frames"
             os.mkdir(fname2)
             
         except FileExistsError:
@@ -151,14 +170,16 @@ try:
         
         for item in fsort(os.listdir(fname)):
             with beetroot.suppress():
-                subprocess.call(vtracer + f" -p 8 -l 3.5 -s 90 --input tempframes/{item} ---output frames/" + ".".join(item.split(".")[:-1] + ["svg"]))
+                subprocess.call(vtracer + f" -f 16 -p 8 -g 0 -m polygon --input {fname}/{item} ---output {fname2}/" + ".".join(item.split(".")[:-1] + ["svg"]))
             
+        log(0, f"Done in ~{ltimer.stop()} ms.")
         log(0, "Removing temporary frame folder...")
         pb.progress()
+        ltimer.start()
         
         try:
-            #shutil.rmtree(fname)
-            pass
+            shutil.rmtree(fname)
+            #pass
             
         except FileNotFoundError:
             log(1, "File not found when deleting temporary .bmp folder for frame extracts")
@@ -166,8 +187,17 @@ try:
         except PermissionError:
             log(1, "Either permission is not granted or frames are being accessed by another program.")
             
+        log(0, f"Done in ~{ltimer.stop()} ms.")
+        log(0, "Demuxing audio...")
+        pb.progress()
+        ltimer.start()
+        
+        vclip.audio.write_audiofile(vidname + "/audio.wav", codec="pcm_s16le")
+            
         pb.progress()
         print("\nDone!")
+        log(0, f"Done in ~{ltimer.stop()} ms.\n")
+        log(0, f"MP42VVC is done! It took {wtimer.stop()} ms.")
     
 except Exception as error:
     exc_type, exc_obj, tb = sys.exc_info()
@@ -177,8 +207,9 @@ except Exception as error:
     linecache.checkcache(filename)
     line = linecache.getline(filename, lineno, f.f_globals)
     
-    err = f"Line {lineno}: " + type(error).__name__ + ": " + str(error)
+    perr = type(error).__name__ + ": " + str(error)
+    err = f"File {tb.tb_frame.f_locals.get('filename')}: Line {lineno}: " + type(error).__name__ + ": " + str(error)
     log(2, err)
     log(1, "Exiting...")
-    print(f"An error has occured.\n{err}\nCheck `latest.log` for more details.")
+    print(f"An error has occured.\n{perr}\nCheck `latest.log` for more details.")
     sys.exit()
