@@ -68,14 +68,27 @@ def log(mode, text):
             return 1
         
 log(0, "Starting...")
-print("Converting...")
+print("Starting...")
 
 import shutil
 import beetroot
 import linecache
 import argparse
+import tempfile
+import platform
 
-pb = beetroot.progBar(3)
+tmpdir = tempfile.gettempdir() if platform.system() == ("Windows" or "Linux") else 1
+
+if platform.system() == "Windows":
+    tmpdir += "\\VVCP"
+    
+elif platform.system() == "Linux":
+    tmpdir += "/VVCP"
+
+else:
+    raise OSError("Only Windows and Linux are supported")
+
+pb = beetroot.progBar(4)
 
 class InvalidCodecError(Exception):
     pass
@@ -110,6 +123,7 @@ try:
         file = args.File #The .mp4 file
         vidname = ".".join(file.split(".")[:-1])
         
+        log(0, f"The tmpdir is at {tmpdir}")
         log(0, f"File: {file}")
         log(0, "Unpacking...")
         pb.progress()
@@ -117,14 +131,20 @@ try:
         wtimer = beetroot.stopwatch()
         ltimer.start()
         
-        shutil.unpack_archive(file, vidname, "xztar")
+        shutil.unpack_archive(file, tmpdir, "xztar")
         
         pb.progress()
         log(0, f"Done in ~{ltimer.stop()} ms.")
+        log(0, f"Display frames")
+        ltimer.start()
+        
+        pb.progress()
+        log(0, f"Done in ~{ltimer.stop()} ms.")
+        log(0, f"Removing temporary video files")
         ltimer.start()
         
         try:
-            shutil.rmtree(vidname)
+            shutil.rmtree(tmpdir)
             
         except FileNotFoundError:
             log(1, "File not found when deleting temporary unpacked video.")
