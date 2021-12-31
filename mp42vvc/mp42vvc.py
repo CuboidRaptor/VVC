@@ -77,6 +77,7 @@ import subprocess
 import beetroot
 import shutil
 import platform
+import shutil
 
 from moviepy.editor import VideoFileClip
 from zipfile import ZipFile
@@ -237,17 +238,11 @@ try:
         pb.progress()
         ltimer.start()
         
-        with open(vidname + ".zip", "w") as f:
-            pass
-        
-        with ZipFile(vidname + ".zip") as zobj:
-            zobj.write(vidname + "/config.json")
-            zobj.write(vidname + "/audio.flac")
-            
-            for dirname, subf, fnames in os.walk(vidname + "/frames"):
-                for fname in fnames:
-                    fpath = os.path.join(dirname, fname)
-                    zobj.write(fpath, os.path.basename(fpath))
+        shutil.make_archive(
+            vidname,
+            "zip",
+            vidname
+        )
         
         log(0, f"Done in ~{ltimer.stop()} ms.")
         log(0, "Renaming to .vvc file...")
