@@ -234,26 +234,38 @@ try:
             json.dump(dat, f)
             
         log(0, f"Done in ~{ltimer.stop()} ms.")
-        log(0, "Zipping video into archive...")
+        log(0, "Zipping video into .tar.bz2 archive...")
         pb.progress()
         ltimer.start()
         
         shutil.make_archive(
             vidname,
-            "zip",
+            "bztar",
             vidname
         )
         
         log(0, f"Done in ~{ltimer.stop()} ms.")
-        log(0, "Renaming to .vvc file...")
+        log(0, "Renaming to .vvc file and cleaning temporary directory...")
         pb.progress()
         ltimer.start()
         
         try:
-            os.rename(vidname + ".zip", vidname + ".vvc")
-            
+            os.rename(vidname + ".tar.bz2", vidname + ".vvc")
+
+        except FileNotFoundError:
+            log(1, "Could not find the .tar.bz2 archive when renaming.")
+        
         except PermissionError:
             log(1, "Permission was denied when renaming output.")
+        
+        try:
+            shutil.rmtree(vidname)
+            
+        except FileNotFoundError:
+            log(1, "File not found when deleting tempdir. Perhaps already manually deleted?")
+            
+        except PermissionError:
+            log(1, "Permission was denied when deleting tempdir.")
         
         pb.progress()
         print("\nDone!")
