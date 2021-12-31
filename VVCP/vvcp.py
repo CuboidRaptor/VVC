@@ -73,8 +73,9 @@ print("Converting...")
 import shutil
 import beetroot
 import linecache
+import argparse
 
-pb = beetroot.progBar(1)
+pb = beetroot.progBar(3)
 
 class InvalidCodecError(Exception):
     pass
@@ -96,8 +97,44 @@ def fsort(a):
 
 try:
     if __name__.endswith("__main__"):
-        1/0
-    
+        pa = argparse.ArgumentParser(
+            description="Play .vvc files."
+        )
+        pa.add_argument(
+            "File",
+            metavar="file",
+            type=str,
+            help="Filename of .vvc to play"
+        )
+        args = pa.parse_args()
+        file = args.File #The .mp4 file
+        vidname = ".".join(file.split(".")[:-1])
+        
+        log(0, f"File: {file}")
+        log(0, "Unpacking...")
+        pb.progress()
+        ltimer = beetroot.stopwatch()
+        wtimer = beetroot.stopwatch()
+        ltimer.start()
+        
+        shutil.unpack_archive(file, vidname, "xztar")
+        
+        pb.progress()
+        log(0, f"Done in ~{ltimer.stop()} ms.")
+        ltimer.start()
+        
+        try:
+            shutil.rmtree(vidname)
+            
+        except FileNotFoundError:
+            log(1, "File not found when deleting temporary unpacked video.")
+            
+        except PermissionError:
+            log(1, "Permission denied when cleaning up temporary unpacked video.")
+        
+        pb.progress()
+        log(0, f"Done in {ltimer.stop()} ms.")
+        
 except Exception as error:
     exc_type, exc_obj, tb = sys.exc_info()
     f = tb.tb_frame

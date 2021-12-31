@@ -235,7 +235,7 @@ try:
             json.dump(dat, f)
             
         log(0, f"Done in ~{ltimer.stop()} ms.")
-        log(0, "Zipping video into .tar.bz2 archive...")
+        log(0, "Zipping video into .tar.xz archive...")
         pb.progress()
         ltimer.start()
         
@@ -251,10 +251,10 @@ try:
         ltimer.start()
         
         try:
-            os.rename(vidname + ".tar.bz2", vidname + ".vvc")
+            os.rename(vidname + ".tar.xz", vidname + ".vvc")
 
         except FileNotFoundError:
-            log(1, "Could not find the .tar.bz2 archive when renaming.")
+            log(1, "Could not find the .tar.xz archive when renaming.")
         
         except PermissionError:
             log(1, "Permission was denied when renaming output.")
@@ -271,7 +271,7 @@ try:
         pb.progress()
         print("\nDone!")
         log(0, f"Done in ~{ltimer.stop()} ms.\n")
-        log(0, f"MP42VVC is done! It took {wtimer.stop()} ms.")
+        log(0, f"MP42VVC is done! It took ~{wtimer.stop()} ms.")
     
 except Exception as error:
     exc_type, exc_obj, tb = sys.exc_info()
