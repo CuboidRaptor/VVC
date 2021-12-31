@@ -79,8 +79,19 @@ import shutil
 import platform
 
 from moviepy.editor import VideoFileClip
+from zipfile import ZipFile
 
-pb = beetroot.progBar(5)
+try:
+    import ujson as json
+    
+except (ModuleNotFoundError, ImportError):
+    try:
+        import simplejson as json
+        
+    except (ModuleNotFoundError, ImportError):
+        import json
+
+pb = beetroot.progBar(8)
 
 def fsort(a):
     ex = "." + a[0].split(".")[-1]
@@ -196,8 +207,58 @@ try:
         pb.progress()
         ltimer.start()
         
-        vclip.audio.write_audiofile(vidname + "/audio.wav", codec="pcm_s16le")
-        subprocess.call(ffmpeg + " -i audio.wav " + vidname + "/audio.flac")
+        with beetroot.suppress():
+            vclip.audio.write_audiofile(vidname + "/audio.wav", codec="pcm_s16le")
+            subprocess.call(ffmpeg + f" -i {vidname}/audio.wav {vidname}/audio.flac")
+            
+        try:
+            os.remove(vidname + "/audio.wav")
+            
+        except FileNotFoundError:
+            log(1, "Audio temporary .wav file was not found.")
+            
+        except PermissionError:
+            log(1, "Permission was not granted. File in restricted area or being used?")
+        
+        log(0, f"Done in ~{ltimer.stop()} ms.")
+        log(0, "Writing config...")
+        pb.progress()
+        ltimer.start()
+        
+        with open(vidname + "/config.json", "w") as f:
+            dat = {
+                "fps": sfps,
+                "reverse": False
+            }
+            json.dump(dat, f)
+            
+        log(0, f"Done in ~{ltimer.stop()} ms.")
+        log(0, "Zipping video into archive...")
+        pb.progress()
+        ltimer.start()
+        
+        with open(vidname + ".zip", "w") as f:
+            pass
+        
+        with ZipFile(vidname + ".zip") as zobj:
+            zobj.write(vidname + "/config.json")
+            zobj.write(vidname + "/audio.flac")
+            
+            for dirname, subf, fnames in os.walk(vidname + "/frames"):
+                for fname in fnames:
+                    fpath = os.path.join(dirname, fname)
+                    zobj.write(fpath, os.path.basename(fpath))
+        
+        log(0, f"Done in ~{ltimer.stop()} ms.")
+        log(0, "Renaming to .vvc file...")
+        pb.progress()
+        ltimer.start()
+        
+        try:
+            os.rename(vidname + ".zip", vidname + ".vvc")
+            
+        except PermissionError:
+            log(1, "Permission was denied when renaming output.")
         
         pb.progress()
         print("\nDone!")
