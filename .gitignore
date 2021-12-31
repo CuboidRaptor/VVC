@@ -7,3 +7,6 @@ test.*
 
 __freeze__.bat
 import.bat
+
+**/tempframes/
+**/test/

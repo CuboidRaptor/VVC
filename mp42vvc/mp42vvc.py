@@ -1,10 +1,14 @@
 #Dependencies (to pip install):
 #moviepy
-#pypotrace
+#beetroot
 
 #function things
 
 import datetime
+import os
+import sys
+
+curdir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 def time():
     yeet = datetime.datetime.now().today()
@@ -20,15 +24,15 @@ def time():
     
     return yeet[1] + "/" + yeet[2] + "/" + yeet[0] + ":" + yeet[3] + ":" + yeet[4] + ":" + yeet[5]
 
-with open("latest.log", "w") as f:
+with open(curdir + "/latest.log", "w") as f:
     pass
 
 def log(mode, text):
     #logger ig
-    with open("latest.log", "r") as f:
+    with open(curdir + "/latest.log", "r") as f:
         logd = f.read()
     
-    with open("latest.log", "w") as f:
+    with open(curdir + "/latest.log", "w") as f:
         curt = time()
         if mode == 0:
             logd = "\n".join(
@@ -69,8 +73,6 @@ print("Converting...")
 #Imports
 import argparse
 import numpy as np
-import os
-import sys
 import traceback
 import linecache
 import subprocess
@@ -108,9 +110,8 @@ def fsort(a):
 try:
     if __name__.endswith("__main__"):
         #Argparse stuff
-        curdir = os.path.abspath(sys.argv[0])
-        vtracer = (os.path.dirname(curdir) + "\\vtracer.exe") if platform.system() == "Windows" else ((os.path.dirname(curdir) + "/vtracer") if platform.system() == "Linux" else 1)
-        ffmpeg = (os.path.dirname(curdir) + "\\ffmpeg\\bin\\ffmpeg.exe") if platform.system() == "Windows" else ((os.path.dirname(curdir) + "/ffmpeg_linux/ffmpeg") if platform.system() == "Linux" else 1)
+        vtracer = (curdir + "\\vtracer.exe") if platform.system() == "Windows" else ((curdir + "/vtracer") if platform.system() == "Linux" else 1)
+        ffmpeg = (curdir + "\\ffmpeg\\bin\\ffmpeg.exe") if platform.system() == "Windows" else ((curdir + "/ffmpeg_linux/ffmpeg") if platform.system() == "Linux" else 1)
         
         if vtracer == 1:
             raise OSError("Only Windows and Linux are supported.")
@@ -240,7 +241,7 @@ try:
         
         shutil.make_archive(
             vidname,
-            "bztar",
+            "xztar",
             vidname
         )
         
